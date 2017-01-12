@@ -12,7 +12,7 @@ angular.module('conFusion.controllers', [])
 
   // Form data for the login modal
   $scope.loginData = {};
-
+  $scope.reservationData={};
   // Create the login modal that we will use later
   $ionicModal.fromTemplateUrl('templates/login.html', {
     scope: $scope
@@ -40,9 +40,31 @@ angular.module('conFusion.controllers', [])
       $scope.closeLogin();
     }, 1000);
   };
+   $ionicModal.fromTemplateUrl('templates/reserve.html', {
+    scope: $scope
+  }).then(function(modal) {
+    $scope.modal = modal;
+  });
+  $scope.closeReserve = function() {
+    $scope.modal.hide();
+  };
+  $scope.reserve = function() {
+    $scope.modal.show();
+  };
+  $scope.doReserve = function() {
+    console.log('reservationData', $scope.reservationData);
+
+    // Simulate a login delay. Remove this and replace with your login
+    // code if using a login system
+    $timeout(function() {
+      $scope.closeLogin();
+    }, 1000);
+  };
+
 })
 
- .controller('MenuController', ['$scope', 'menuFactory','baseURL', function($scope, menuFactory,baseURL) {
+ .controller('MenuController', ['$scope', 'menuFactory','favorityFactory','baseURL', '$ionicListDelegate',
+    function($scope, menuFactory,favorityFactory,baseURL,$ionicListDelegate) {
             $scope.baseURL=baseURL; 
             $scope.tab = 1;
             $scope.filtText = '';
@@ -84,7 +106,72 @@ angular.module('conFusion.controllers', [])
             $scope.toggleDetails = function() {
                 $scope.showDetails = !$scope.showDetails;
             };
+            $scope.addFavorite= function(index){
+               console.log('favorite iteme'+ index);
+               favorityFactory.addFavorite(index);
+               $ionicListDelegate.closeOptionButtons();
+            };
         }])
+    .controller('FavoriteController', ['$scope', 'menuFactory','favorityFactory','baseURL', '$ionicListDelegate','$ionicPopup','$ionicLoading','$timeout',
+    function($scope, menuFactory,favorityFactory,baseURL,$ionicListDelegate,$ionicPopup,$ionicLoading,$timeout) {
+        
+        $scope.baseURL=baseURL;
+        $scope.shouldShowDelete=false;
+        $scope.showMenu = false;
+        $ionicLoading.show({
+            template:'<ion-spinner></ion-spinner>Loading...'
+        });
+        //get favorites dishes id
+        $scope.favorites=favorityFactory.getFavorites();
+        //get dishes
+        menuFactory.getDishes().query(
+                function(response) {
+                    $scope.dishes = response;
+                    $scope.showMenu = true;
+                     $timeout(function(){
+                        $ionicLoading.hide();
+                    },1000);
+                },
+                function(response) {
+                    $scope.message = "Error: "+response.status + " " + response.statusText;
+                    $timeout(function(){
+                        $ionicLoading.hide();
+                    },1000);
+                });
+        
+        $scope.toggleDelete=function(){
+            $scope.shouldShowDelete = !$scope.shouldShowDelete;
+            console.log('shouldShowDelete flag'+ $shouldShowDelete);
+        };
+        $scope.deleteFavorite=function(index){
+            var confirmPopup=$ionicPopup.confirm({
+                title:'confirm Delete',
+                template:'are you sure you want to delete this item ?'
+            });
+            confirmPopup.then(function(res){
+                if(res){
+                   favorityFactory.deleteFavorite(index);
+                }else{
+                    console.log('cancel delete item');
+                }
+            });
+            $scope.shouldShowDelete= false;
+        }
+        
+    }])
+        .filter('favoriteFilter',function(){
+            return function(dishes,favorites){
+                var out=[];
+                for(var i=0; i<favorites.length;i++){
+                    for(var j=0; j<dishes.length ;j++){
+                        if(dishes[j].id === favorites[i].id){
+                            out.push(dishes[j]);
+                        }
+                    }
+                }
+                return out;
+            }
+        })
 
         .controller('ContactController', ['$scope', function($scope) {
 
@@ -193,6 +280,7 @@ angular.module('conFusion.controllers', [])
                     console.log($scope.leaders);
             
                     }])
+          
 
 
 ;

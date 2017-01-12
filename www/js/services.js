@@ -46,5 +46,28 @@ angular.module('conFusion.services', ['ngResource'])
             return $resource(baseURL+"feedback/:id");
     
         }])
+        .factory('favorityFactory',['$resource','baseURL',function($resource,baseURL){
+           var favFac={};
+           var favorites=[];
+           favFac.addFavorite= function(index){
+               for(var i=0;i<favorites.length;i++){
+                   if( favorites[i].id == index){
+                       return;
+                   }
+               }
+               favorites.push({id:index});
+           };
+           favFac.getFavorites=function(){
+               return favorites;
+           };
+           favFac.deleteFavorite=function(index){
+               for(var i=0;i<favorites.length;i++){
+                   if(favorites[i].id== index){
+                       favorites.splice(i,1);
+                   }
+               }
+           };
+           return favFac;
+        }])
 
 ;
