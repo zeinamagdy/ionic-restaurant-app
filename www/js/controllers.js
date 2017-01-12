@@ -60,6 +60,7 @@ angular.module('conFusion.controllers', [])
       $scope.closeLogin();
     }, 1000);
   };
+   
 
 })
 
@@ -205,23 +206,75 @@ angular.module('conFusion.controllers', [])
             };
         }])
 
-        .controller('DishDetailController', ['$scope', '$stateParams', 'menuFactory','baseURL', function($scope, $stateParams, menuFactory,baseURL) {
+        .controller('DishDetailController', ['$scope', '$stateParams','menuFactory','$ionicModal','favorityFactory','baseURL','$ionicPopover', function($scope, $stateParams,menuFactory, $ionicModal,favorityFactory,baseURL,$ionicPopover) {
             $scope.baseURL=baseURL; 
             $scope.dish = {};
+            $scope.comment={};
             $scope.showDish = false;
             $scope.message="Loading ...";
-            
+            $scope.addFavorite= function(index){
+               console.log('favorite iteme'+ index);
+               favorityFactory.addFavorite(index);
+            };
+           $ionicModal.fromTemplateUrl('templates/commentDish.html', {
+                scope: $scope
+            }).then(function(modal) {
+                $scope.modal = modal;
+            });
+            $scope.closeCommentDish = function() {
+                $scope.modal.hide();
+            };
+            $scope.CommentDish = function() {
+                $scope.modal.show();
+            };
+            $scope.doComment = function() {
+                console.log('comment', $scope.comment);
+                $scope.comment.date = new Date().toISOString();
+                console.log($scope.comment);
+                $scope.dish.comments.push($scope.comment);
+                menuFactory.getDishes().update({id:$scope.dish.id},$scope.dish);
+//                $scope.commentForm.$setPristine();
+                $scope.comment = {rating:"",comment:"", author:"", date:""};
+                $scope.closeCommentDish();
+                $scope.closePophover();
+            };      
+
             $scope.dish = menuFactory.getDishes().get({id:parseInt($stateParams.id,10)})
             .$promise.then(
                             function(response){
                                 $scope.dish = response;
                                 $scope.showDish = true;
+                                console.log($scope.dish.id);
+                                var template = '<ion-popover-view><ion-content><ion-list><ion-item ng-click="CommentDish()">add Comment</ion-item><ion-item ng-click="addFavorite(dish.id)">add dish</ion-item></ion-list></ion-content></ion-popover-view>';
+                                $scope.popover = $ionicPopover.fromTemplate(template, {
+                                    scope: $scope
+                                });
+                                $scope.displayPopover=function($event){
+                                    $scope.popover.show($event);
+                                };
+                                $scope.closePophover=$scope.closePopover = function() {
+                                    $scope.popover.hide();
+                                };
+                                  //Cleanup the popover when we're done with it!
+                                $scope.$on('$destroy', function() {
+                                    $scope.popover.remove();
+                                });
+                                  // Execute action on hidden popover
+                                 $scope.$on('popover.hidden', function() {
+                                    // Execute action
+                                 });
+                                  // Execute action on remove popover
+                                $scope.$on('popover.removed', function() {
+                                    // Execute action
+                                 });
+
                             },
                             function(response) {
                                 $scope.message = "Error: "+response.status + " " + response.statusText;
                             }
             );
-
+            
+            
             
         }])
 
@@ -235,7 +288,7 @@ angular.module('conFusion.controllers', [])
                 console.log($scope.mycomment);
                 
                 $scope.dish.comments.push($scope.mycomment);
-        menuFactory.getDishes().update({id:$scope.dish.id},$scope.dish);
+                 menuFactory.getDishes().update({id:$scope.dish.id},$scope.dish);
                 
                 $scope.commentForm.$setPristine();
                 

@@ -47,6 +47,7 @@ angular.module('conFusion.services', ['ngResource'])
     
         }])
         .factory('favorityFactory',['$resource','baseURL',function($resource,baseURL){
+           console.log('add');
            var favFac={};
            var favorites=[];
            favFac.addFavorite= function(index){
