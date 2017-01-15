@@ -1,7 +1,7 @@
 'use strict';
 angular.module('conFusion.controllers', [])
 
-.controller('AppCtrl', function($scope, $ionicModal, $timeout) {
+.controller('AppCtrl', function($scope, $ionicModal, $timeout,$localStorage) {
 
   // With the new view caching in Ionic, Controllers are only called
   // when they are recreated or on app start, instead of every page change.
@@ -11,29 +11,30 @@ angular.module('conFusion.controllers', [])
   //});
 
   // Form data for the login modal
-  $scope.loginData = {};
+  $scope.loginData = $localStorage.getObject('userInfo','{}');
+//  if($scope.loginData != '{}'){$scope.loggedUser= false; console.log($scope.loggedUser);}
   $scope.reservationData={};
   // Create the login modal that we will use later
   $ionicModal.fromTemplateUrl('templates/login.html', {
     scope: $scope
   }).then(function(modal) {
-    $scope.modal = modal;
+    $scope.loginmodal = modal;
   });
 
   // Triggered in the login modal to close it
   $scope.closeLogin = function() {
-    $scope.modal.hide();
-  };
+    $scope.loginmodal.hide();
+  };0
 
   // Open the login modal
   $scope.login = function() {
-    $scope.modal.show();
+    $scope.loginmodal.show();
   };
 
   // Perform the login action when the user submits the login form
   $scope.doLogin = function() {
     console.log('Doing login', $scope.loginData);
-
+    $localStorage.storeObject('userInfo',$scope.loginData);
     // Simulate a login delay. Remove this and replace with your login
     // code if using a login system
     $timeout(function() {
@@ -43,13 +44,13 @@ angular.module('conFusion.controllers', [])
    $ionicModal.fromTemplateUrl('templates/reserve.html', {
     scope: $scope
   }).then(function(modal) {
-    $scope.modal = modal;
+    $scope.reservemodal = modal;
   });
   $scope.closeReserve = function() {
-    $scope.modal.hide();
+    $scope.reservemodal.hide();
   };
   $scope.reserve = function() {
-    $scope.modal.show();
+    $scope.reservemodal.show();
   };
   $scope.doReserve = function() {
     console.log('reservationData', $scope.reservationData);
